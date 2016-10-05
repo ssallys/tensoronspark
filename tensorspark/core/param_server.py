@@ -4,10 +4,12 @@ from tornado.ioloop import IOLoop
 import threading
 import numpy as np
 import json
-import sets
 
-import session_util as sutil
-from weight_combiner import MeanWeightCombiner
+import time
+import logging
+
+from . import session_util as sutil
+from .weight_combiner import MeanWeightCombiner
 
 class ParameterServer(threading.Thread):
 	def __init__(self, sess, param_dict, num_worker, weight_combiner=None, port=10080):
@@ -19,7 +21,7 @@ class ParameterServer(threading.Thread):
 		self._version = 0
 		self._sync_lock = threading.Lock()
 		self._num_worker = num_worker
-		self._ended_worker = sets.Set()
+		self._ended_worker = set()
 		self._http_server = None
 
 		if weight_combiner is None:
@@ -38,6 +40,7 @@ class ParameterServer(threading.Thread):
 			self._http_server.stop()
 			self._http_server = None
 
+MAX_WAIT_SECONDS_BEFORE_SHUTDOWN = 3
 
 class ParameterServerHandler(websocket.WebSocketHandler):
 	def __init__(self, *args, **kwargs):
@@ -94,9 +97,27 @@ class ParameterServerHandler(websocket.WebSocketHandler):
 			self.server._ended_worker.add(worker_id)
 			if len(self.server._ended_worker) == self.server._num_worker:
 				self.server.stop()
-				self.server._ended_worker = sets.Set()
+				self.server._ended_worker = set()
 
-
-
-
+	def sig_handler(self, sig, frame):
+	    logging.warning('Caught signal: %s', sig)
+	    IOLoop.instance().add_callback(self.shutdown)
+	
+	def shutdown(self):
+	    logging.info('Stopping http server')
+	    self.server.stop()
+	
+	    logging.info('Will shutdown in %s seconds ...', MAX_WAIT_SECONDS_BEFORE_SHUTDOWN)
+	    io_loop = IOLoop.instance()
+	
+	    deadline = time.time() + MAX_WAIT_SECONDS_BEFORE_SHUTDOWN
+	
+	    def stop_loop():
+	        now = time.time()
+	        if now < deadline and (io_loop._callbacks or io_loop._timeouts):
+	            io_loop.add_timeout(now + 1, stop_loop)
+	        else:
+	            io_loop.stop()
+	            logging.info('Shutdown')
+	    stop_loop()
 

@@ -6,7 +6,7 @@ import numpy as np
 import json
 import itertools
 
-import session_util as sutil
+import tensorspark.core.session_util as sutil
 
 class SessionWorker(object):
 	def __init__(self, index, param_bc):
@@ -64,7 +64,7 @@ class SessionWorker(object):
 		sess =  tf.Session()
 		self._sess = sess
 		with sess.as_default():
-			print ('Worker ' + str(self._id) +' starts running')
+			print(('Worker ' + str(self._id) +' starts running'))
 			sutil.restore_session_hdfs(sess, user, session_path, session_meta_path, tmp_local_dir, host, port)
 			fetches = None
 			if isinstance(fetch_name, list):
@@ -93,7 +93,7 @@ class SessionWorker(object):
 
 			while True:
 				items = [[] for i in range(length)]
-				for i in xrange(batch_size):
+				for i in range(batch_size):
 					"""
 					To transform partition data from the iterator of tuples 
 					to seperate lists of each feed items. E.g., 
@@ -103,7 +103,7 @@ class SessionWorker(object):
 						if isinstance(partition, list):
 							item = partition[cursor]
 						else: 
-							item = partition.next()
+							item = next(partition)
 						assert(len(item) == length)
 						for j in range(length):
 							items[j].append(item[j])
@@ -134,7 +134,7 @@ class SessionWorker(object):
 				self.push_parameters(param_meta)
 
 			self.notify_end()
-			print ('Worker ' + str(self._id) +' stops running')
+			print(('Worker ' + str(self._id) +' stops running'))
 
 
 

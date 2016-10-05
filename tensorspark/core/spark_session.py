@@ -4,9 +4,12 @@ from tensorflow.python import pywrap_tensorflow as tf_session
 from tensorflow.python.util import compat
 import os
 
-from session_worker import SessionWorker
-from param_server import ParameterServer
-from param_server import ParameterServerHandler
+from tensorspark.core.session_worker import SessionWorker
+from tensorspark.core.param_server import ParameterServer
+from tensorspark.core.param_server import ParameterServerHandler
+# from session_worker import SessionWorker
+# from param_server import ParameterServer
+# from param_server import ParameterServerHandler
 
 # class SparkSession(BaseSession):
 class SparkSession(object):
@@ -197,7 +200,7 @@ class SparkSession(object):
 		filename: name of file that the session model is saved to.
 		base_dir: the hdfs directory of the saveing session
 		"""
-		import hdfs_util as hdfs
+		import tensorspark.core.hdfs_util as hdfs
 		local_dir = self._get_tmp_dir()
 		if local_dir == '':
 			local_dir = '.'

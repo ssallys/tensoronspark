@@ -56,7 +56,7 @@ def restore_session_hdfs(sess, user, hdfs_path, meta_hdfs_path, tmp_local_dir, h
 	meta_filename = meta_hdfs_path.split('/')[-1]
 
 	# (host, port) = self._get_webhdfs_host_port()
-	import hdfs_util as hdfs
+	import tensorspark.core.hdfs_util as hdfs
 	(local_meta_path, local_path) = hdfs.get(host, user, [meta_hdfs_path, hdfs_path], local_dir)
 	# sess_graph = hdfs.read(host, user, meta_hdfs_path, port)
 	# meta_file = open(local_path, 'wb')

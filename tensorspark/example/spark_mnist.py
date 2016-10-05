@@ -16,19 +16,18 @@ def extract_images(sc, filepath, dtype=dtypes.float32, reshape=True):
 		file_image_map = []
 		while True: 
 			try:
-				pathData = iterator.next()
+				pathData = next(iterator)
 				filename = pathData[0]
 				fileindex = filename.split('-')[2]
 				data = pathData[1]
-
-				image_meta = struct.unpack('>iiii', buffer(data, 0, 16))
+				image_meta = struct.unpack('>iiii', memoryview(data[:16]))
 				magic = image_meta[0]
 				if magic !=2051:
 					raise ValueError('Invalid magic number %d in MNIST image file: %s' % (magic, filename))
 				num_images = image_meta[1]
 				rows = image_meta[2]
 				cols = image_meta[3]
-				buf = buffer(data, 16)
+				buf = memoryview(data[16:])
 				images = np.frombuffer(buf, dtype=np.uint8)
 				images = images.reshape(num_images, rows, cols, 1)
 
@@ -67,17 +66,17 @@ def extract_labels(sc, filepath, num_class, one_hot=False):
 		file_label_map = []
 		while True:
 			try:
-				pathData = iterator.next()
+				pathData = next(iterator)
 				filename = pathData[0]
 				fileindex = filename.split('-')[2]
 				data = pathData[1]
-
-				label_meta = struct.unpack('>ii', buffer(data, 0, 8))
+				
+				label_meta = struct.unpack('>ii', memoryview(data[:8]))
 				magic = label_meta[0]
 				if magic !=2049:
 					raise ValueError('Invalid magic number %d in MNIST image file: %s' % (magic, filename))
 				num_labels = label_meta[1]
-				buf = buffer(data, 8)
+				buf = memoryview(data[8:])
 				labels = np.frombuffer(buf, dtype=np.uint8)
 				if one_hot:
 					labels = dense_to_one_hot(labels, num_class)
@@ -111,11 +110,11 @@ def flatten_image_label(iteration):
 	image_label_list = []
 	while True:
 		try:
-			file_image_label = iteration.next()
+			file_image_label = next(iteration)
 			images = file_image_label[1][0]
 			labels = file_image_label[1][1]
 			assert (images.shape[0] == labels.shape[0])
-			for i in xrange(images.shape[0]):
+			for i in range(images.shape[0]):
 				image_label_list.append((images[i], labels[i]))
 		except StopIteration:
 			break
@@ -183,8 +182,8 @@ def train(sc=None, user=None, name='spark_mnist', server_host='localhost', serve
 	mnist_data = input_data.read_data_sets("MNIST_data/", one_hot=True)
 	correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(y_,1))
 	accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-	print(sess.run(accuracy, feed_dict={x: mnist_data.test.images, y_: mnist_data.test.labels}))
+	print((sess.run(accuracy, feed_dict={x: mnist_data.test.images, y_: mnist_data.test.labels})))
 
 	return sess
 
-
+# train(sc=sc, user='etri', name='mnist_try', server_host='localhost', server_port=10080, sync_interval=100, batch_size=100, num_partition=1, num_epoch=2)

@@ -418,7 +418,7 @@ def ls(host, user, hdfs_path, port=50070):
             )
             obj_str += ' ' + hdfs_path + '/' + obj['pathSuffix']
  
-            print "%s" % obj_str
+            print(("%s", obj_str))
  
  
 def mkdir(host, user, hdfs_path, port=50070):
