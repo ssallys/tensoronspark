@@ -1,3 +1,4 @@
+import sys
 import tensorspark.example.spark_mnist as mnist
 from pyspark import SparkContext
 
